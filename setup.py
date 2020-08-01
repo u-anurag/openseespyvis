@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="openseespyvis", # Replace with your own username
-    version="0.0.1",
+    version="0.0.2",
     author="anurag upadhyay",
     author_email="iitg.anurag@gmail.com",
     description="A development package of openseespy visualization commands.",

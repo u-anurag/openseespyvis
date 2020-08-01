@@ -32,8 +32,8 @@ from matplotlib.widgets import Slider
 
 
 #### CHANGE THESE BEFORE COMMITTING, call them before calling openseespy here ####
-import internal_database_functions as idbf
-import internal_plotting_functions as ipltf
+import openseespyvis.internal_database_functions as idbf
+import openseespyvis.internal_plotting_functions as ipltf
 import openseespy.opensees as ops
 
 #####################################################################
