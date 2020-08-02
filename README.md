@@ -14,7 +14,7 @@ To use this package, import the commands from **openseespyvis** instead of *open
 import openseespyvis.Get_Rendering as opsplt
 ```
 
-Now, use all the openseespy visualization commands.
+Now, use all the openseespy visualization commands. For example,
 
 ```bash
 opsplt.plot_model()
