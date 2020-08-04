@@ -6,6 +6,8 @@
 ##																						##
 ##																						##
 ## Created By - Anurag Upadhyay, University of Utah. https://github.com/u-anurag		##
+##																						##
+## (C) Copyright, 2019, Anurag Upadhyay													##
 ## 																						##
 ##########################################################################################
 
