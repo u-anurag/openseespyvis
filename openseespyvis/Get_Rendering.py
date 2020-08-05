@@ -6,8 +6,8 @@
 ##																						##
 ##																						##
 ## Created By - Anurag Upadhyay, University of Utah. https://github.com/u-anurag		##
-##            - Christian Slotboom, University of British Columbia.                     ##
-##              https://github.com/cslotboom	                                        ##
+##																						##
+## (C) Copyright, 2019, Anurag Upadhyay													##
 ## 																						##
 ##########################################################################################
 
