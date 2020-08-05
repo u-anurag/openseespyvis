@@ -7,6 +7,11 @@ Install this package with,
 pip install openseespyvis
 ```
 
+Upgrade the package with,
+```bash
+python -m pip install --upgrade openseespyvis
+```
+
 To use this package, import the commands from **openseespyvis** instead of *openseespy.postprocessing*. For example,
 
 ```bash
