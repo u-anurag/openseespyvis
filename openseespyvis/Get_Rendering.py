@@ -6,6 +6,8 @@
 ##																						##
 ##																						##
 ## Created By - Anurag Upadhyay, University of Utah. https://github.com/u-anurag		##
+##            - Christian Slotboom, University of British Columbia.                     ##
+##              https://github.com/cslotboom	                                        ##
 ## 																						##
 ##########################################################################################
 
@@ -207,7 +209,7 @@ def saveFiberData2D(ModelName, LoadCaseName, eleNumber, sectionNumber, deltaT = 
     """
     Model : string
         The name of the input model database.    
-    Loadcase : string
+    LoadCase : string
         The name of the input loadcase.    
     element : int
         The input element to be recorded
@@ -763,58 +765,61 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 		return fig, ax
 
 
-def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10, fps = 24, 
-                          FrameInterval = 0, skipFrame =1, timeScale = 1):
+def animate_deformedshape( Model = 'none', LoadCase = 'none', dt = 0, tStart = 0, tEnd = 0, scale = 10, fps = 24, 
+                          FrameInterval = 0, timeScale = 1, Movie='none'):
     """
     This defines the animation of an opensees model, given input data.
     
     For big models it's unlikely that the animation will actually run at the 
     desired fps in "real time". Matplotlib just isn't built for high fps 
     animation.
-
     Parameters
     ----------
     Model : string
         The name of the input model database.    
-    Loadcase : string
+    LoadCase : string
         The name of the input loadcase.    
     dt : 1D array
         The time step between frames in the input file. The input file should
         have approximately the same number of time between each step or the
         animation will appear to speed up or slow down.
+    tStart: float, optional
+        The start time for animation. It can be approximate value and the program 
+        will find the closest matching time step.
+    tEnd: float, optional
+        The end time for animation. It can be approximate value and the program 
+        will find the closest matching time step.
     NodeFileName : Str
         Name of the input node information file.
     ElementFileName : Str
         Name of the input element connectivity file.
-    Scale :  float, optional
+    scale :  float, optional
         The scale on the xy/xyz displacements. The default is 1.
     fps : TYPE, optional
         The frames per second to be displayed. These values are dubious at best
         The default is 24.
     FrameInterval : float, optional
         The time interval between frames to be used. The default is 0.
-    skipFrame : TYPE, optional
-        DESCRIPTION. The default is 1.
     timeScale : TYPE, optional
         DESCRIPTION. The default is 1.
-
+    Movie : str, optional 
+        Name of the movie file if the user wants to save the animation as .mp4 file.
     Returns
     -------
     TYPE
         Earthquake animation.
-
     """
     
-    if (Model == 'none') or ( Loadcase == 'none') or ( dt == 0):
+    if (Model == 'none') or ( LoadCase == 'none') or ( dt == 0):
         raise Exception('Invalid inputs given. Please specify a model database, a load case, and a timestep')
     
     
     # Read Disp From ODB
     #TODO error handeling?
-    time, Disp = idbf._readNodeDispData(Model,Loadcase)
+    time, Disp = idbf._readNodeDispData(Model,LoadCase)
     
     nodes, elements = idbf._readNodesandElements(Model)
-    Disp = Disp*Scale
+    Disp = Disp*scale
     
     # Reshape array
     Ntime = len(Disp[:,0])
@@ -830,6 +835,7 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
 
     # initialize figure
     fig, ax = ipltf._initializeFig(nodes[:,1:], ndm, Disp)    
+    plt.subplots_adjust(bottom=.15) # Add extra space bellow graph
     
 	# Adjust plot area.   
     ipltf._setStandardViewport(fig, ax, nodes[:,1:], ndm, Disp)
@@ -844,14 +850,15 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
     # Add Text
     if ndm == 2:
         time_text = ax.text(0.95, 0.01, '', verticalalignment='bottom', 
-                            horizontalalignment='right', transform=ax.transAxes, color='grey')
+                            horizontalalignment='right', transform=ax.transAxes, color='blue')
         
         EQObjects = ipltf._plotEle_2D(nodes, elements, initialDisp, fig, ax, show_element_tags = 'no')
         [EqfigLines, EqfigSurfaces, EqfigText] = EQObjects 
         EqfigNodes, = ax.plot(Disp[0,:,0],Disp[0,:,1], **node_style_animation)  
                     
     if ndm == 3:
-        
+        time_text = ax.text2D(0.95, 0.01, '', verticalalignment='bottom', 
+                            horizontalalignment='right', transform=ax.transAxes, color='blue')
         EQObjects = ipltf._plotEle_3D(nodes, elements, initialDisp, fig, ax, show_element_tags = 'no')
         [EqfigLines, EqfigSurfaces, EqfigText] = EQObjects 
         EqfigNodes, = ax.plot(Disp[0,:,0], Disp[0,:,1], Disp[0,:,2], **node_style_animation)  
@@ -860,13 +867,13 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
     # Animation
     # ========================================================================
    
-    
-    # Scale on displacement
+    # scale on displacement
     dtInput  = dt
     dtFrames  = 1/fps
     Ntime = len(Disp[:,0])
     Frames = np.arange(0,Ntime)
-       
+    framesTime = Frames*dt
+
     # If the interval is zero
     if FrameInterval == 0:
         FrameInterval = dtFrames*1000/timeScale
@@ -875,15 +882,32 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
         
     FrameStart = Frames[0]
     FrameEnd = Frames[-1]
-    
+	
+    if tStart != 0:
+        jj = (np.abs(time - tStart)).argmin()
+        FrameStart = Frames[jj]
+	
+    if tEnd != 0:
+        if time[-1] < tEnd:
+            print("XX Warining: tEnd has exceeded maximum analysis time step XX")
+            print("XX tEnd has been set to final analysis time step XX")
+        elif tEnd <= tStart:
+            print("XX Input Warning: tEnd should be greater than tStart XX")
+            print("XX tEnd has been set to final analysis time step XX")
+        else:
+            kk = (np.abs(time - tEnd)).argmin()
+            FrameEnd = Frames[kk]
+
+    aniFrames = FrameEnd-FrameStart  # Number of frames to be animated
+	
     # Slider Location and size relative to plot
     # [x, y, xsize, ysize]
     axSlider = plt.axes([0.25, .03, 0.50, 0.02])
-    plotSlider = Slider(axSlider, 'Frame', FrameStart, FrameEnd, valinit=FrameStart)
+    plotSlider = Slider(axSlider, 'Time', framesTime[FrameStart], framesTime[FrameEnd], valinit=framesTime[FrameStart])
     
     # Animation controls
-    global is_manual
-    is_manual = False # True if user has taken control of the animation   
+    global is_paused
+    is_paused = False # True if user has taken control of the animation   
     
     def on_click(event):
         # Check where the click happened
@@ -892,18 +916,22 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
             # Event happened within the slider, ignore since it is handled in update_slider
             return
         else:
-            # user clicked somewhere else on canvas = unpause
-            global is_manual
-            is_manual=False    
-        
-    def animate2D_slider(TimeStep):
+            # Toggle on off based on clicking
+            global is_paused
+            if is_paused == True:
+                is_paused=False
+            elif is_paused == False:
+                is_paused=True
+                
+    def animate2D_slider(Time):
         """
         The slider value is liked with the plot - we update the plot by updating
         the slider.
         """
-        global is_manual
-        is_manual=True
-        TimeStep = int(TimeStep)
+        global is_paused
+        is_paused=True
+        # Convert time to frame
+        TimeStep = (np.abs(framesTime - Time)).argmin()
                
         # The current node coordinants in (x,y) or (x,y,z)
         CurrentNodeCoords =  nodes[:,1:] + Disp[TimeStep,:,:]
@@ -942,19 +970,19 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
                 SurfCounter += 1
        
         # update time Text
-        time_text.set_text(round(TimeStep*dtInput,1))
-        time_text.set_text(str(round(TimeStep*dtInput,1)) )        
+        # time_text.set_text("Time= "+'%.2f' % time[TimeStep]+ " s")
         
         # redraw canvas while idle
         fig.canvas.draw_idle()    
             
         return EqfigNodes, EqfigLines, EqfigSurfaces, EqfigText
 
-    def animate3D_slider(TimeStep):
+    def animate3D_slider(Time):
         
-        global is_manual
-        is_manual=True
-        TimeStep = int(TimeStep)
+        
+        global is_paused
+        is_paused=True
+        TimeStep = (np.abs(framesTime - Time)).argmin()
         
         # this is the most performance critical area of code
         
@@ -996,6 +1024,9 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
                 EqfigSurfaces[SurfCounter]._vec = tempVec
                 SurfCounter += 1
                 
+        # update time Text
+        # time_text.set_text("Time= "+'%.3f' % time[TimeStep]+ " s")
+        
         # redraw canvas while idle
         fig.canvas.draw_idle()   
 
@@ -1003,19 +1034,22 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
 
     def update_plot(ii):
         # If the control is manual, we don't change the plot    
-        global is_manual
-        if is_manual:
+        global is_paused
+        if is_paused:
             return EqfigNodes, EqfigLines, EqfigSurfaces, EqfigText
        
         # Find the close timeStep and plot that
-        CurrentFrame = int(np.floor(plotSlider.val))
+        CurrentTime = plotSlider.val
+        CurrentFrame = (np.abs(framesTime - CurrentTime)).argmin()
+
         CurrentFrame += 1
         if CurrentFrame >= FrameEnd:
-            CurrentFrame = 0
+            CurrentFrame = FrameStart
         
         # Update the slider
-        plotSlider.set_val(CurrentFrame)
-        is_manual = False # the above line called update_slider, so we need to reset this
+        plotSlider.set_val(framesTime[CurrentFrame])
+        
+        is_paused = False # the above line called update_slider, so we need to reset this
         return EqfigNodes, EqfigLines, EqfigSurfaces, EqfigText
 
     if ndm == 2:
@@ -1026,7 +1060,16 @@ def animate_deformedshape( Model = 'none', Loadcase = 'none', dt = 0, Scale = 10
     # assign click control
     fig.canvas.mpl_connect('button_press_event', on_click)
 
-    ani = animation.FuncAnimation(fig, update_plot, Frames, interval = FrameInterval)
+    ani = animation.FuncAnimation(fig, update_plot, aniFrames, interval = FrameInterval)
+	
+    if Movie != "none":
+        MovefileName = Movie + '.mp4'
+        ODBdir = Model+"_ODB"		# ODB Dir name
+        Movfile = os.path.join(ODBdir, LoadCase, MovefileName)
+        print("Saving the animation movie as "+MovefileName+" in "+ODBdir+"->"+LoadCase+" folder")
+        ani.save(Movfile, writer='ffmpeg')
+
+    plt.show()
     return ani
 
 
@@ -1038,7 +1081,7 @@ def plot_fiberResponse2D(Model, LoadCase, element, section, LocalAxis = 'y', Inp
     ----------
     Model : string
         The name of the input model database.    
-    Loadcase : string
+    LoadCase : string
         The name of the input loadcase.    
     element : int
         The input element to be plotted
@@ -1112,9 +1155,8 @@ def plot_fiberResponse2D(Model, LoadCase, element, section, LocalAxis = 'y', Inp
     
     ax.set_ylabel(axisYlabel)  
     ax.set_xlabel(axisXlabel)    
-    
-    print(printLine)
-    
+        
+    plt.show()
     return fig, ax
     
 
@@ -1125,7 +1167,7 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
     ----------
     Model : string
         The name of the input model database.    
-    Loadcase : string
+    LoadCase : string
         The name of the input loadcase.    
     element : int
         The input element to be plotted
@@ -1137,13 +1179,15 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
     InputType : string, optional
         The quantity 
     skipStart : int, optional
-        If specified, this many datapoints will be skipped from the data start.
-        The default is 0.
+        If specified, this many datapoints will be skipped from the analysis
+        data set, before reductions.
+        The default is 0, or no reduction
     skipEnd : int, optional
-        If specified, this many frames will be skipped at the end of 
-        the analysis. The default is 0.
+        If specified, this many frames will be skipped at the end of the 
+        analysis dataset, before reduction. The default is 0, or no reduction.
     rFactor : int, optional
-        If specified, only every "x" frames will be reduced by this factor. 
+        If specified, only every "x" frames will be plotted. e.g. x = 2, every 
+        other frame is shown.
         The default is 1.
     outputFrames : int, optional
         The number of frames to be included after all other reductions. If the
@@ -1220,7 +1264,8 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
     # Reduce the data if the user specifies
     if rFactor != 1:
         xinputs = xinputs[::rFactor, :]
-        yinputs = yinputs[::rFactor, :]
+        yinputs = yinputs[::rFactor, :]    
+        timeSteps = timeSteps[::rFactor]
     
     # If the Frames isn't specified, use the length of the reduced vector.
     if outputFrames == 0:
@@ -1235,6 +1280,8 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
     
     # Initialize the plot
     fig, ax = plt.subplots()
+    plt.subplots_adjust(bottom=.15) # Add extra space bellow graph
+    
     line, = ax.plot(xinput, yinputs[0,:])
     Xline = ax.plot([fibrePositionSorted[0,0],fibrePositionSorted[0,-1]], [0, 0], c ='black', linewidth = 0.5)
     plt.xlim(xmin, xmax)
@@ -1250,11 +1297,11 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
     # Slider Location and size relative to plot
     # [x, y, xsize, ysize]
     axSlider = plt.axes([0.25, .03, 0.50, 0.02])
-    plotSlider = Slider(axSlider, 'Frame', FrameStart, FrameEnd, valinit=FrameStart, valfmt = '%d')
-    
+    plotSlider = Slider(axSlider, 'Time', timeSteps[FrameStart], timeSteps[FrameEnd], valinit=timeSteps[FrameStart])
+
     # Animation controls
-    global is_manual
-    is_manual = False # True if user has taken control of the animation   
+    global is_paused
+    is_paused = False # True if user has taken control of the animation   
     
     def on_click(event):
         # Check where the click happened
@@ -1263,18 +1310,21 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
             # Event happened within the slider, ignore since it is handled in update_slider
             return
         else:
-            # user clicked somewhere else on canvas = unpause
-            global is_manual
-            is_manual=False        
+            # Toggle on/off based on click
+            global is_paused
+            if is_paused == True:
+                is_paused=False
+            elif is_paused == False:
+                is_paused=True       
     
     # Define the update function
-    def update_line_slider(time):
-        global is_manual
-        is_manual=True
+    def update_line_slider(Time):
+        global is_paused
+        is_paused=True
 
-        time = int(time)
+        TimeStep = (np.abs(timeSteps - Time)).argmin()
         # Get the current data        
-        y = yinputs[time,:]
+        y = yinputs[TimeStep,:]
         
         # Update the background line
         line.set_data(xinput, y)
@@ -1286,19 +1336,26 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
     def update_plot(ii):
     
         # If the control is manual, we don't change the plot    
-        global is_manual
-        if is_manual:
+        global is_paused
+        if is_paused:
             return line,
        
         # Find the close timeStep and plot that
-        CurrentFrame = int(np.floor(plotSlider.val))
+        # CurrentFrame = int(np.floor(plotSlider.val))
+
+        # Find the close timeStep and plot that
+        CurrentTime = plotSlider.val
+        CurrentFrame = (np.abs(timeSteps - CurrentTime)).argmin()
+
         CurrentFrame += 1
         if CurrentFrame >= FrameEnd:
-            CurrentFrame = 0
+            CurrentFrame = FrameStart
         
         # Update the slider
-        plotSlider.set_val(CurrentFrame)
-        is_manual = False # the above line called update_slider, so we need to reset this
+        plotSlider.set_val(timeSteps[CurrentFrame])        
+        
+        # Update the slider
+        is_paused = False # the above line called update_slider, so we need to reset this
         return line,  
     
     
@@ -1312,118 +1369,7 @@ def animate_fiberResponse2D(Model, LoadCase, element, section,LocalAxis = 'y', I
     line_ani = animation.FuncAnimation(fig, update_plot, outputFrames, 
                                        # fargs=(xinput, yinputs, line), 
                                        interval=interval)
+									   
+    plt.show()
     return line_ani
 
-  
-def _sample_plot_model(ModelName = '', LoadCaseName = '', Scale = 1, 
-                      show_element_tags = 'no', show_node_tags = 'no',
-                      Plot_Displacements = 'no'):
-    
-    Input = False
-    # try to read a model the nodes and elements
-    try :
-        nodes, elements = idbf.getNodesandElements()
-        Input = True
-    except:
-        print("No model active.") 
-
-    # try to get the nodes and elements from the database
-    try :
-        nodes, elements = idbf._readNodesandElements(ModelName)
-        Input = True
-    except:
-        print("No database found.")
-    
-    if not Input:
-        raise Exception('No input model was specified')    
-    
-    
-    # Process Node information, Calulate number of degrees of freedom
-    nodeList = nodes[:,0]    
-    Nnodes = len(nodeList)
-    nodeCoordArray = nodes[:,1:]
-    ndm = len(nodes[0,1:])   
-
-    # Get displacements
-    if Plot_Displacements == 'yes':
-        # Get Node coordinants
-        OBD = readODB(ModelName, LoadCaseName)
-        
-        DispNodeArray = OBD[2]*Scale
-        
-    # Otherwise we use zero as our displacement
-    else:
-        DispNodeArray = np.zeros([Nnodes,ndm])
-    
-    DispNodeCoordArray = nodes[:,1:] + DispNodeArray
-
-    
-    # Nele = len(elements)
-    # figNodeTags = [None]*Nele
-    NodeText = [None]*Nnodes
-    
-    # Initialize figure
-    fig, ax = ipltf._initializeFig(DispNodeCoordArray, ndm)
-    
-    # Check if the model is 2D or 3D
-    if ndm == 2:
-        
-        # Plot elements
-        OutputObjects = ipltf._plotEle_2D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags)
-
-        if show_node_tags == 'yes':
-            for j in range(Nnodes):
-                NodeText[j] = ax.text(*nodes[j,1:]*1.02, str(int(nodes[j,0])), **node_text_style) #label nodes
-			
-        nodeObjects = ax.scatter(nodeCoordArray[:,0], nodeCoordArray[:,1], **node_style)
-
-        #ResizePlot(fig, ax, ndm)
-        nodeMins = np.array([min(nodeCoordArray[:,0]), min(nodeCoordArray[:,1])])
-        nodeMaxs = np.array([max(nodeCoordArray[:,0]), max(nodeCoordArray[:,1])])
-		
-        xViewCenter = (nodeMins[0]+nodeMaxs[0])/2
-        yViewCenter = (nodeMins[1]+nodeMaxs[1])/2
-        view_range = max(max(nodeCoordArray[:,0])-min(nodeCoordArray[:,0]), max(nodeCoordArray[:,1])-min(nodeCoordArray[:,1]))
-		
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-			
-
-    if ndm == 3:
-        
-
-        print('3D model')
-		
-        # Plot Model and make Objects
-        OutputObjects = ipltf._plotEle_3D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags)
-
-        if show_node_tags == 'yes':
-            for jj in range(Nnodes):
-                NodeText[jj] = ax.text(*nodes[jj,1:]*1.02, str(int(nodes[jj,0])), **node_text_style) #label nodes
-				
-        nodeObjects = ax.scatter(nodeCoordArray[:,0], nodeCoordArray[:,1], nodeCoordArray[:,2], **node_style)								#show nodes
-		
-        nodeMins = np.array([min(nodeCoordArray[:,0]),min(nodeCoordArray[:,1]),min(nodeCoordArray[:,2])])
-        nodeMaxs = np.array([max(nodeCoordArray[:,0]),max(nodeCoordArray[:,1]),max(nodeCoordArray[:,2])])
-		
-        xViewCenter = (nodeMins[0]+nodeMaxs[0])/2
-        yViewCenter = (nodeMins[1]+nodeMaxs[1])/2
-        zViewCenter = (nodeMins[2]+nodeMaxs[2])/2
-		
-        view_range = max(max(nodeCoordArray[:,0])-min(nodeCoordArray[:,0]), max(nodeCoordArray[:,1])-min(nodeCoordArray[:,1]), max(nodeCoordArray[:,2])-min(nodeCoordArray[:,2]))
-
-        ax.set_xlim(xViewCenter-(view_range/4), xViewCenter+(view_range/4))
-        ax.set_ylim(yViewCenter-(view_range/4), yViewCenter+(view_range/4))
-        ax.set_zlim(zViewCenter-(view_range/3), zViewCenter+(view_range/3))
-		
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-	
-    plt.axis('on')
-    plt.show()
-    
-    OutputObjects = [nodeObjects, *OutputObjects, NodeText]
-    
-    return OutputObjects
-	
