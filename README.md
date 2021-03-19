@@ -24,3 +24,6 @@ Now, use all the openseespy visualization commands ([Here](https://openseespydoc
 ```bash
 opsplt.plot_model()
 ```
+
+# USER MANUAL
+Check out the ([Wiki](https://github.com/u-anurag/openseespyvis/wiki)) for all the commands available in openseespyvis.
