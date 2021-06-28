@@ -4,21 +4,8 @@ import matplotlib.pyplot as plt
 
 import openseespyvis.internal_database_functions as idbf 
 
-ele_style = {'color':'black', 'linewidth':1, 'linestyle':'-'} # elements
-ele_lim_a_style = {'color':'blue', 'linewidth':1.5, 'linestyle':'-'} # elements
-ele_lim_b_style = {'color':'green', 'linewidth':1.5, 'linestyle':'-'} # elements
-ele_lim_c_style = {'color':'orange', 'linewidth':1.5, 'linestyle':'-'} # elements
-ele_lim_d_style = {'color':'red', 'linewidth':1.5, 'linestyle':'-'} # elements
-node_style = {'color':'black', 'marker':'o', 'facecolor':'black','linewidth':0.} 
-node_text_style = {'fontsize':6, 'fontweight':'regular', 'color':'green'} 
-ele_text_style = {'fontsize':6, 'fontweight':'bold', 'color':'darkred'} 
 
-WireEle_style = {'color':'black', 'linewidth':1, 'linestyle':':'} # elements
-Eig_style = {'color':'red', 'linewidth':1, 'linestyle':'-'} # elements
-
-limStateColors = ["blue","green","orange","red"]
-
-def _plotCubeSurf(nodeCords, ax, fillSurface, eleStyle):
+def _plotCubeSurf(nodeCords, ax, stylesheet):
 	## This procedure is called by the plotCubeVol() command
 	aNode = nodeCords[0]
 	bNode = nodeCords[1]
@@ -33,7 +20,7 @@ def _plotCubeSurf(nodeCords, ax, fillSurface, eleStyle):
 	## Initialize varables for matplotlib objects
 	tempSurface = [None]
 
-	if fillSurface == 'yes':
+	if stylesheet.fillSurface == True:
 		tempSurface = ax.plot_surface(surfXarray, surfYarray, surfZarray, edgecolor='k', color='g', alpha=.5)
     			
 	del aNode, bNode, cNode, dNode, surfXarray, surfYarray, surfZarray
@@ -41,7 +28,7 @@ def _plotCubeSurf(nodeCords, ax, fillSurface, eleStyle):
 	return tempSurface
 
 
-def _plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, element, eleStyle, fillSurface):
+def _plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, element, stylesheet):
 	## procedure to render a cubic element, use eleStyle = "wire" for a wire frame, and "solid" for solid element lines.
 	## USe fillSurface = "yes" for color fill in the elements. fillSurface="no" for wireframe.
 	
@@ -51,23 +38,23 @@ def _plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax,
 	# 2D Planer four-node shell elements
 	# [iNode, jNode, kNode, lNode,iiNode, jjNode, kkNode, llNode]  = [*nodesCords]
   
-	tempSurfaces[0] = _plotCubeSurf([iNode, jNode, kNode, lNode], ax, fillSurface, eleStyle)
-	tempSurfaces[1] = _plotCubeSurf([iNode, jNode, jjNode, iiNode], ax, fillSurface, eleStyle)
-	tempSurfaces[2] = _plotCubeSurf([iiNode, jjNode, kkNode, llNode], ax, fillSurface, eleStyle)
-	tempSurfaces[3] = _plotCubeSurf([lNode, kNode, kkNode, llNode], ax, fillSurface, eleStyle)
-	tempSurfaces[4] = _plotCubeSurf([jNode, kNode, kkNode, jjNode], ax, fillSurface, eleStyle)
-	tempSurfaces[5] = _plotCubeSurf([iNode, lNode, llNode, iiNode], ax, fillSurface, eleStyle)
+	tempSurfaces[0] = _plotCubeSurf([iNode, jNode, kNode, lNode], ax, stylesheet)
+	tempSurfaces[1] = _plotCubeSurf([iNode, jNode, jjNode, iiNode], ax, stylesheet)
+	tempSurfaces[2] = _plotCubeSurf([iiNode, jjNode, kkNode, llNode], ax, stylesheet)
+	tempSurfaces[3] = _plotCubeSurf([lNode, kNode, kkNode, llNode], ax, stylesheet)
+	tempSurfaces[4] = _plotCubeSurf([jNode, kNode, kkNode, jjNode], ax, stylesheet)
+	tempSurfaces[5] = _plotCubeSurf([iNode, lNode, llNode, iiNode], ax, stylesheet)
     
 	if show_element_tags == 'yes':
 		tempTag = ax.text((iNode[0]+jNode[0]+kNode[0]+lNode[0]+iiNode[0]+jjNode[0]+kkNode[0]+llNode[0])/8, 
 							(iNode[1]+jNode[1]+kNode[1]+lNode[1]+iiNode[1]+jjNode[1]+kkNode[1]+llNode[1])/8, 
 							(iNode[2]+jNode[2]+kNode[2]+lNode[2]+iiNode[2]+jjNode[2]+kkNode[2]+llNode[2])/8, 
-							str(element), **ele_text_style) #label elements
+							str(element), **stylesheet.ele_text_style) #label elements
         
 	return tempSurfaces, tempTag
 
 
-def _plotTri2D(iNode, jNode, kNode, ax, show_element_tags, element, eleStyle, fillSurface):
+def _plotTri2D(iNode, jNode, kNode, ax, show_element_tags, eleTag, stylesheet):
 	## procedure to render a 2D three node shell element. use eleStyle = "wire" for a wire frame, and "solid" for solid element lines.
 	## USe fillSurface = "yes" for color fill in the elements. fillSurface="no" for wireframe.
 							
@@ -79,23 +66,19 @@ def _plotTri2D(iNode, jNode, kNode, ax, show_element_tags, element, eleStyle, fi
 	tempLines, = plt.plot((iNode[0], jNode[0], kNode[0], iNode[0]), 
                          (iNode[1], jNode[1], kNode[1], iNode[1]), marker='')
     
-	# update style
-	if eleStyle == "wire":
-		plt.setp(tempLines,**WireEle_style)
-	else:
-		plt.setp(tempLines,**ele_style)
+	plt.setp(tempLines,**stylesheet.ele_style)
     
-	if fillSurface == 'yes':
+	if stylesheet.fillSurface == True:
 		tempSurface = ax.fill(np.array([iNode[0], jNode[0], kNode[0]]), 
 								np.array([iNode[1], jNode[1], kNode[1]]), color='g', alpha=.6)
         
 	if show_element_tags == 'yes':
 		tempTag = ax.text((iNode[0] + jNode[0] + kNode[0])*1.0/3, (iNode[1]+jNode[1]+kNode[1])*1.0/3, 
-							str(element), **ele_text_style) #label elements
+							str(eleTag), **stylesheet.ele_text_style) #label elements
 	return tempLines, tempSurface, tempTag
 
 
-def _plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, eleStyle, fillSurface):
+def _plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, stylesheet):
 	## procedure to render a 2D four node shell element. use eleStyle = "wire" for a wire frame, and "solid" for solid element lines.
 	## USe fillSurface = "yes" for color fill in the elements. fillSurface="no" for wireframe.
     tempLines = [None]
@@ -105,24 +88,20 @@ def _plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, eleS
     tempLines, = plt.plot((iNode[0], jNode[0], kNode[0], lNode[0], iNode[0]), 
                (iNode[1], jNode[1], kNode[1], lNode[1], iNode[1]), marker='')
     
-    # update style
-    if eleStyle == "wire":
-        plt.setp(tempLines,**WireEle_style)
-    else:
-        plt.setp(tempLines, **ele_style)
+    plt.setp(tempLines, **stylesheet.ele_style)
 
-    if fillSurface == 'yes':
+    if stylesheet.fillSurface == True:
         tempSurface = ax.fill(np.array([iNode[0], jNode[0], kNode[0], lNode[0]]), 
                                np.array([iNode[1], jNode[1], kNode[1], lNode[1]]), color='g', alpha=.6)
     
     tempTag = []
     if show_element_tags == 'yes':
         tempTag = ax.text((iNode[0]+jNode[0]+kNode[0]+lNode[0])*1.0/4, (iNode[1]+jNode[1]+kNode[1]+lNode[1])*1.0/4, 
-                          str(element), **ele_text_style) #label elements
+                          str(eleTag), **stylesheet.ele_text_style) #label elements
     return tempLines, tempSurface, tempTag
 
 
-def _plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, eleStyle, fillSurface):
+def _plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, stylesheet):
 	## procedure to render a 3D four node shell element. use eleStyle = "wire" for a wire frame, and "solid" for solid element lines.
 	## USe fillSurface = "yes" for color fill in the elements. fillSurface="no" for wireframe.
 	
@@ -135,14 +114,10 @@ def _plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, eleS
                          (iNode[1], jNode[1], kNode[1], lNode[1], iNode[1]),
                          (iNode[2], jNode[2], kNode[2], lNode[2], iNode[2]), marker='')
 
-    # update style
-    if eleStyle == "wire":
-        plt.setp(tempLines,**WireEle_style)
-    else:
-        plt.setp(tempLines,**ele_style)
+    plt.setp(tempLines,**stylesheet.ele_style)
 	
     # Get Surface
-    if fillSurface == 'yes':
+    if stylesheet.fillSurface == 'yes':
         tempSurface = ax.plot_surface(np.array([[iNode[0], lNode[0]], [jNode[0], kNode[0]]]), 
                                        np.array([[iNode[1], lNode[1]], [jNode[1], kNode[1]]]), 
                                        np.array([[iNode[2], lNode[2]], [jNode[2], kNode[2]]]), color='g', alpha=.6)
@@ -150,11 +125,9 @@ def _plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, eleS
     # Get Tag
     if show_element_tags == 'yes':
         tempTag = ax.text((iNode[0]+jNode[0]+kNode[0]+lNode[0])*1.05/4, (iNode[1]+jNode[1]+kNode[1]+lNode[1])*1.05/4, 
-                          (iNode[2]+jNode[2]+kNode[2]+lNode[2])*1.05/4, str(element), **ele_text_style) #label elements
+                          (iNode[2]+jNode[2]+kNode[2]+lNode[2])*1.05/4, str(element), **stylesheet.ele_text_style) #label elements
 
-    return tempLines, tempSurface, tempTag
-
-	
+    return tempLines, tempSurface, tempTag	
 
 
 def _checkEleLength2D(iNode,jNode):
@@ -177,55 +150,47 @@ def _checkEleLength3D(iNode,jNode):
 	return eleLengthCheck
 	
 			
-def _plotBeam2D(iNode, jNode, ax, show_element_tags, element, eleStyle):
-	##procedure to render a 2D two-node element. use eleStyle = "wire" for a wire frame, and "solid" for solid element lines.
-	# tempLines, = plt.plot((iNode[0], jNode[0]), (iNode[1], jNode[1]), marker='')
+def _plotBeam2D(iNode, jNode, ax, show_element_tags, element, stylesheet, eleColor =None):
 	tempLines, = plt.plot((iNode[0], jNode[0]), (iNode[1], jNode[1]))
     
-	if eleStyle in limStateColors:
-		if _checkEleLength2D(iNode,jNode) == "ZLE":
-			ele_lim_style = {'color':eleStyle, 'linewidth':1.0, 'linestyle':'-', 'marker':'o', 'mfc':eleStyle, 'markersize':2} # elements
-		else:
-			ele_lim_style = {'color':eleStyle, 'linewidth':5, 'linestyle':'-', 'marker':''} # elements			
-		plt.setp(tempLines,**ele_lim_style)
-	elif eleStyle == "wire":
-		plt.setp(tempLines,**WireEle_style)
+	if _checkEleLength2D(iNode,jNode) == "ZLE":
+		ele_style = stylesheet.ele_zle_style # elements
+	if eleColor != None:
+		ele_style = stylesheet.ele_lim_styles[eleColor]
+        
 	else:
-		plt.setp(tempLines,**ele_style)
+		ele_style = stylesheet.ele_style # elements			
+
+	plt.setp(tempLines,**ele_style)
     
 	tempTag = []
 	if show_element_tags == 'yes':
 		tempTag = ax.text((iNode[0]+jNode[0])/2, (iNode[1]+jNode[1])*1.02/2, 
-							str(element), **ele_text_style) #label elements
+							str(element), **stylesheet.ele_text_style) #label elements
 
 	return tempLines, tempTag
 
 
-def _plotBeam3D(iNode, jNode, ax, show_element_tags, element, eleStyle): 
+def _plotBeam3D(iNode, jNode, ax, show_element_tags, element, stylesheet): 
 	##procedure to render a 3D two-node element. use eleStyle = "wire" for a wire frame, and "solid" for solid element lines.
 	tempLines, = plt.plot((iNode[0], jNode[0]), (iNode[1], jNode[1]),(iNode[2], jNode[2]), marker='')
     
-	if eleStyle in limStateColors:
-		if _checkEleLength2D(iNode,jNode) == "ZLE":
-			ele_lim_style = {'color':eleStyle, 'linewidth':1.0, 'linestyle':'-', 'marker':'o', 'mfc':eleStyle, 'markersize':2} # elements
-		else:
-			ele_lim_style = {'color':eleStyle, 'linewidth':5, 'linestyle':'-', 'marker':'', 'mfc':eleStyle, 'markersize':1} # elements			
-		plt.setp(tempLines,**ele_lim_style)
-	
-	elif eleStyle == "wire":
-		plt.setp(tempLines,**WireEle_style)	
+	if _checkEleLength2D(iNode,jNode) == "ZLE":
+		ele_style = stylesheet.ele_zle_style # elements
 	else:
-		plt.setp(tempLines,**ele_style)
+		ele_style = stylesheet.ele_lim_style			
+	
+	plt.setp(tempLines,**ele_style)
 		
 	tempTag = []
 	if show_element_tags == 'yes':
 		tempTag = ax.text((iNode[0]+jNode[0])/2, (iNode[1]+jNode[1])*1.02/2, 
-							(iNode[2]+jNode[2])*1.02/2, str(element), **ele_text_style) #label elements
+							(iNode[2]+jNode[2])*1.02/2, str(element), **stylesheet.ele_text_style) #label elements
 
 	return tempLines, tempTag
 
 
-def _plotEle_2D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags):
+def _plotEle_2D(nodes, elements, DispNodeCoordArray, fig, ax, stylesheet, show_element_tags):
 
     nodeList = nodes[:,0]
     Nnode = len(nodeList)    
@@ -255,10 +220,10 @@ def _plotEle_2D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags)
             iNode = xyz_labels[tempNodes[0]]
             jNode = xyz_labels[tempNodes[1]]
 				
-            figLines[jj], = plt.plot((iNode[0], jNode[0]), (iNode[1], jNode[1]),marker='', **ele_style)
+            figLines[jj], = plt.plot((iNode[0], jNode[0]), (iNode[1], jNode[1]),marker='', **stylesheet.ele_style)
 				
             if show_element_tags == 'yes':
-               figTags[jj] = ax.text((iNode[0]+jNode[0])/2, (iNode[1]+jNode[1])/2, str(eletag), **ele_text_style) #label elements
+               figTags[jj] = ax.text((iNode[0]+jNode[0])/2, (iNode[1]+jNode[1])/2, str(eletag), **stylesheet.ele_text_style) #label elements
 			
         if len(tempNodes) == 3:
             # 2D Planer three-node shell elements
@@ -266,7 +231,7 @@ def _plotEle_2D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags)
             jNode = xyz_labels[tempNodes[1]]
             kNode = xyz_labels[tempNodes[2]]
 				
-            outputs = _plotTri2D(iNode,jNode,kNode, ax, show_element_tags, eletag, ele_style, fillSurface='yes')
+            outputs = _plotTri2D(iNode,jNode,kNode, ax, show_element_tags, eletag, stylesheet.ele_style, fillSurface='yes')
             [figLines[jj], figSurfaces[SurfCounter], figTags[jj]] = [*outputs]
             SurfCounter += 1
             
@@ -278,14 +243,14 @@ def _plotEle_2D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags)
             kNode = xyz_labels[tempNodes[2]]
             lNode = xyz_labels[tempNodes[3]]
 				
-            outputs = _plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eletag, ele_style, fillSurface='yes')
+            outputs = _plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eletag, stylesheet.ele_style, fillSurface='yes')
             [figLines[jj], figSurfaces[SurfCounter], figTags[jj]] = [*outputs]
             SurfCounter += 1
             
     return figLines, figSurfaces, figTags
 
 
-def _plotEle_3D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags):
+def _plotEle_3D(nodes, elements, DispNodeCoordArray, fig, ax, stylesheet, show_element_tags):
 
     nodeList = nodes[:,0]
     Nnode = len(nodeList)
@@ -336,7 +301,7 @@ def _plotEle_3D(nodes, elements, DispNodeCoordArray, fig, ax, show_element_tags)
             kNode = xyz_labels[tempNodes[2]]
             lNode = xyz_labels[tempNodes[3]]
 				
-            outputs = _plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eletag, ele_style, fillSurface='yes')
+            outputs = _plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eletag, stylesheet)
             [figLines[LineCounter], figSurfaces[SurfCounter], figTags[jj]] = [*outputs]
             
             LineCounter += 1
@@ -410,7 +375,7 @@ def _initializeFig(nodeCords,ndm, Disp = np.array([])):
     return fig, ax
 
 
-def _setStandardViewport(fig, ax, nodeCords, ndm, Disp = np.array([])):
+def _setStandardViewport(fig, ax, nodeCords, ndm, styleSheet, Disp = np.array([])):
     """
     This function sets the standard viewport size of a function, using the
     nodes as an input.
@@ -433,6 +398,8 @@ def _setStandardViewport(fig, ax, nodeCords, ndm, Disp = np.array([])):
         An array of the bounding node coordinants in the object. This can
         simply be the node coordinats, or it can be the node coordinats with 
         updated
+    styleSheet: styleSheet
+        The style sheet object to be used for the rendering.
     ndm : int
         The number of dimenions.
 
@@ -492,5 +459,12 @@ def _setStandardViewport(fig, ax, nodeCords, ndm, Disp = np.array([])):
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
-	   
+
+    ax.set_facecolor(styleSheet.facecolor)
+    fig.set_facecolor(styleSheet.backgroundcolor)
+    if styleSheet.axisOff == True:
+        ax.set_axis_off()
+    else:
+        plt.axis('on')
+    
     return fig, ax

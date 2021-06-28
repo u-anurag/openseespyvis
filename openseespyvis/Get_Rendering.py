@@ -37,6 +37,11 @@ import openseespyvis.internal_database_functions as idbf
 import openseespyvis.internal_plotting_functions as ipltf
 import openseespy.opensees as ops
 
+from openseespyvis.styles import customStyle, wireStyle
+
+style      = customStyle()
+overlapStyle    = wireStyle()
+
 #####################################################################
 ####    All the plotting related definitions start here.
 ####
@@ -236,17 +241,18 @@ def saveFiberData2D(ModelName, LoadCaseName, eleNumber, sectionNumber = 1, delta
 
 ### All the plotting related definitions start here.
 
-ele_style = {'color':'black', 'linewidth':1, 'linestyle':'-'} # elements
-node_style = {'color':'black', 'marker':'o', 'facecolor':'black','linewidth':0.}
-node_style_animation = {'color':'black', 'marker':'o','markersize':2., 'linewidth':0.} 
+# ele_style = style.ele_style
 
-node_text_style = {'fontsize':8, 'fontweight':'regular', 'color':'green'} 
-ele_text_style = {'fontsize':8, 'fontweight':'bold', 'color':'darkred'} 
+# ele_style = {'color':'black', 'linewidth':1, 'linestyle':'-'} # elements
+# node_style = {'color':'black', 'marker':'o', 'facecolor':'black','linewidth':0.}
 
-WireEle_style = {'color':'black', 'linewidth':1, 'linestyle':':'} # elements
-Eig_style = {'color':'red', 'linewidth':1, 'linestyle':'-'} # elements
+# node_text_style = {'fontsize':8, 'fontweight':'regular', 'color':'green'} 
+# ele_text_style = {'fontsize':8, 'fontweight':'bold', 'color':'darkred'} 
+
+# WireEle_style = {'color':'black', 'linewidth':1, 'linestyle':':'} # elements
+# Eig_style = {'color':'red', 'linewidth':1, 'linestyle':'-'} # elements
 	
-def plot_model(*argv,Model="none"):
+def plot_model(*argv, Model="none", stylesheet = style):
 	
 	""" 
 	Command: plot_model(<"nodes">,<"elements">,<Model="ModelName">)
@@ -313,7 +319,7 @@ def plot_model(*argv,Model="none"):
 				iNode = nodecoords(Nodes[0])
 				jNode = nodecoords(Nodes[1])
 				
-				ipltf._plotBeam2D(iNode, jNode, ax, show_element_tags, eleTag, "solid")
+				ipltf._plotBeam2D(iNode, jNode, ax, show_element_tags, eleTag, style)
 				
 			if len(Nodes) == 3:
 				# 2D Planer three-node shell elements
@@ -321,7 +327,7 @@ def plot_model(*argv,Model="none"):
 				jNode = nodecoords(Nodes[1])
 				kNode = nodecoords(Nodes[2])
 				
-				ipltf._plotTri2D(iNode, jNode, kNode, ax, show_element_tags, eleTag, ele_style, fillSurface='yes')
+				ipltf._plotTri2D(iNode, jNode, kNode, ax, show_element_tags, eleTag, style)
 						
 			if len(Nodes) == 4:
 				# 2D Planer four-node shell elements
@@ -330,14 +336,14 @@ def plot_model(*argv,Model="none"):
 				kNode = nodecoords(Nodes[2])
 				lNode = nodecoords(Nodes[3])
 				
-				ipltf._plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, ele_style, fillSurface='yes')
+				ipltf._plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, style)
 
 			
 		if show_node_tags == 'yes':
 			for node in nodetags:
-				ax.text(nodecoords(node)[0]*1.02, nodecoords(node)[1]*1.02, str(int(node)),**node_text_style) #label nodes
+				ax.text(nodecoords(node)[0]*1.02, nodecoords(node)[1]*1.02, str(int(node)),**style.node_text_style) #label nodes
 			
-			ax.scatter(nodeArray[:,1], nodeArray[:,2], **node_style)
+			ax.scatter(nodeArray[:,1], nodeArray[:,2], **style.node_style)
 					
 		ax.set_xlabel('X')
 		ax.set_ylabel('Y')
@@ -357,7 +363,7 @@ def plot_model(*argv,Model="none"):
 				iNode = nodecoords(Nodes[0])
 				jNode = nodecoords(Nodes[1])
 				
-				ipltf._plotBeam3D(iNode, jNode, ax, show_element_tags, eleTag, "solid")
+				ipltf._plotBeam3D(iNode, jNode, ax, show_element_tags, eleTag, style)
 				
 			if len(Nodes) == 4:
 				# 3D four-node Quad/shell element
@@ -366,7 +372,7 @@ def plot_model(*argv,Model="none"):
 				kNode = nodecoords(Nodes[2])
 				lNode = nodecoords(Nodes[3])
 				
-				ipltf._plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, ele_style, fillSurface='yes')
+				ipltf._plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, style)
 				
 			if len(Nodes) == 8:
 				# 3D eight-node Brick element
@@ -380,17 +386,17 @@ def plot_model(*argv,Model="none"):
 				kkNode = nodecoords(Nodes[6])
 				llNode = nodecoords(Nodes[7])
 				
-				ipltf._plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, eleTag, 'solid', fillSurface='yes')
+				ipltf._plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, eleTag, style)
 				
 		if show_node_tags == 'yes':
 			for node in nodetags:
-				ax.text(nodecoords(node)[0]*1.02, nodecoords(node)[1]*1.02, nodecoords(node)[2]*1.02, str(int(node)),**node_text_style) #label nodes
+				ax.text(nodecoords(node)[0]*1.02, nodecoords(node)[1]*1.02, nodecoords(node)[2]*1.02, str(int(node)),**style.node_text_style) #label nodes
 				
-			ax.scatter(nodeArray[:,1], nodeArray[:,2], nodeArray[:,3], **node_style)								# show nodes
+			ax.scatter(nodeArray[:,1], nodeArray[:,2], nodeArray[:,3], **style.node_style)								# show nodes
 				
         
-	ipltf._setStandardViewport(fig, ax, nodeArray[:,1:], len(nodecoords(nodetags[0])))
-	plt.axis('on')
+	ipltf._setStandardViewport(fig, ax, nodeArray[:,1:], len(nodecoords(nodetags[0])) , style)
+# 	plt.axis('on')
 	plt.show()
 	return fig, ax
 
@@ -468,9 +474,9 @@ def plot_modeshape(*argv,overlap="yes",Model="none"):
 				jNode_final = nodecoordsEigen(Nodes[1])
 				
 				if overlap == "yes":
-					ipltf._plotBeam2D(iNode, jNode, ax, show_element_tags, eleTag, "wire")
+					ipltf._plotBeam2D(iNode, jNode, ax, show_element_tags, eleTag, overlapStyle)
 				
-				ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag, "solid")
+				ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag, style)
 				
 			if len(Nodes) == 3:
 				## 2D Planer three-node shell elements
@@ -483,9 +489,9 @@ def plot_modeshape(*argv,overlap="yes",Model="none"):
 				kNode_final = nodecoordsEigen(Nodes[2])
 
 				if overlap == "yes":
-					ipltf._plotTri2D(iNode, jNode, kNode, iNode, ax, show_element_tags, eleTag, "wire", fillSurface='no')
+					ipltf._plotTri2D(iNode, jNode, kNode, iNode, ax, show_element_tags, eleTag, overlapStyle)
 				
-				ipltf._plotTri2D(iNode_final, jNode_final, kNode_final, iNode_final, ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+				ipltf._plotTri2D(iNode_final, jNode_final, kNode_final, iNode_final, ax, show_element_tags, eleTag, style)
 				
 			if len(Nodes) == 4:
 				## 2D four-node Quad/shell element
@@ -500,9 +506,9 @@ def plot_modeshape(*argv,overlap="yes",Model="none"):
 				lNode_final = nodecoordsEigen(Nodes[3])
 				
 				if overlap == "yes":
-					ipltf._plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, "wire", fillSurface='no')
+					ipltf._plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, overlapStyle)
 					
-				ipltf._plotQuad2D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+				ipltf._plotQuad2D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, style)
 				        
 		ax.text(0.05, 0.95, "Mode "+str(modeNumber), transform=ax.transAxes)
 		ax.text(0.05, 0.90, "T = "+str("%.3f" % Tn)+" s", transform=ax.transAxes)
@@ -525,7 +531,7 @@ def plot_modeshape(*argv,overlap="yes",Model="none"):
 				jNode_final = nodecoordsEigen(Nodes[1])
 				
 				if overlap == "yes":
-					ipltf._plotBeam3D(iNode, jNode, ax, show_element_tags, eleTag, "wire")
+					ipltf._plotBeam3D(iNode, jNode, ax, show_element_tags, eleTag, overlapStyle)
 				
 				ipltf._plotBeam3D(iNode_final, jNode_final, ax, show_element_tags, eleTag, "solid")
 				
@@ -542,9 +548,9 @@ def plot_modeshape(*argv,overlap="yes",Model="none"):
 				lNode_final = nodecoordsEigen(Nodes[3])
 				
 				if overlap == "yes":
-					ipltf._plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, "wire", fillSurface='no')
+					ipltf._plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, overlapStyle)
 					
-				ipltf._plotQuad3D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+				ipltf._plotQuad3D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, style)
 
 			if len(Nodes) == 8:
 				## 3D eight-node Brick element
@@ -568,17 +574,17 @@ def plot_modeshape(*argv,overlap="yes",Model="none"):
 				llNode_final = nodecoordsEigen(Nodes[7])
 				
 				if overlap == "yes":
-					ipltf._plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, eleTag, "wire", fillSurface='no') # plot undeformed shape
+					ipltf._plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, eleTag, overlapStyle) # plot undeformed shape
 
 				ipltf._plotCubeVol(iNode_final, jNode_final, kNode_final, lNode_final, iiNode_final, jjNode_final, kkNode_final, llNode_final, 
-								ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+								ax, show_element_tags, eleTag, style)
 								
 		ax.text2D(0.10, 0.95, "Mode "+str(modeNumber), transform=ax.transAxes)
 		ax.text2D(0.10, 0.90, "T = "+str("%.3f" % Tn)+" s", transform=ax.transAxes)
 
 				
-	ipltf._setStandardViewport(fig, ax, DeflectedNodeCoordArray, len(nodecoords(nodetags[0])))
-	plt.axis('on')
+	ipltf._setStandardViewport(fig, ax, DeflectedNodeCoordArray, style, len(nodecoords(nodetags[0])))
+	
 	plt.show()
 	return fig, ax
 	
@@ -730,16 +736,16 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 								adjusted_NodeArray[adjNodeNum,0:1] = nodecoordsFinal(node)
 						
 					if overlap == "yes":
-						ipltf._plotBeam2D(iNode, jNode, ax, show_element_tags, eleTag, "wire")
+						ipltf._plotBeam2D(iNode, jNode, ax, show_element_tags, eleTag, overlapStyle)
 					
 					if monitorElementDisplay == 'yes':
 						if eleTag in MonitorEleTags:
 							eleColor = idbf._elementMonitorCheck(eleTag, dof, monitorOutput, limitStates, ipltf.limStateColors, MonitorEleInfo, MonitorEleTags, MonitorEleDef, jj)
-							ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag, eleColor)
+							ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag,style, eleColor)
 						else:
-							ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag, "solid")
+							ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag, style)
 					else:
-						ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag, "solid")
+						ipltf._plotBeam2D(iNode_final, jNode_final, ax, show_element_tags, eleTag, style)
 					
 				if len(Nodes) == 3:
 					## 2D Planer three-node shell elements
@@ -757,9 +763,9 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 								adjusted_NodeArray[adjNodeNum,0:1] = nodecoordsFinal(node)
 								
 					if overlap == "yes":
-						ipltf._plotTri2D(iNode, jNode, kNode, iNode, ax, show_element_tags, eleTag, "wire", fillSurface='no')
+						ipltf._plotTri2D(iNode, jNode, kNode, iNode, ax, show_element_tags, eleTag, overlapStyle)
 					
-					ipltf._plotTri2D(iNode_final, jNode_final, kNode_final, iNode_final, ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+					ipltf._plotTri2D(iNode_final, jNode_final, kNode_final, iNode_final, ax, show_element_tags, eleTag, style)
 					
 				if len(Nodes) == 4:
 					## 2D four-node Quad/shell element
@@ -779,9 +785,9 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 								adjusted_NodeArray[adjNodeNum,0:1] = nodecoordsFinal(node)
 								
 					if overlap == "yes":
-						ipltf._plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, "wire", fillSurface='no')
+						ipltf._plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, overlapStyle)
 						
-					ipltf._plotQuad2D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+					ipltf._plotQuad2D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, style)
 				
 				adjNodeNum+=1
 	            
@@ -818,15 +824,15 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 								adjusted_NodeArray[adjNodeNum,:] = nodecoordsFinal(node)
 								
 					if overlap == "yes":
-						ipltf._plotBeam3D(iNode, jNode, ax, show_element_tags, eleTag, "wire")
+						ipltf._plotBeam3D(iNode, jNode, ax, show_element_tags, eleTag, overlapStyle)
 					if monitorElementDisplay == 'yes':
 						if eleTag in MonitorEleTags:
 							eleColor = idbf._elementMonitorCheck(eleTag, dof, monitorOutput, limitStates, ipltf.limStateColors, MonitorEleInfo, MonitorEleTags, MonitorEleDef, jj)
-							ipltf._plotBeam3D(iNode_final, jNode_final, ax, show_element_tags, eleTag, eleColor)
+							ipltf._plotBeam3D(iNode_final, jNode_final, ax, show_element_tags, eleTag, style, eleColor)
 						else:
-							ipltf._plotBeam3D(iNode_final, jNode_final, ax, show_element_tags, eleTag, "solid")
+							ipltf._plotBeam3D(iNode_final, jNode_final, ax, show_element_tags, style)
 					else:
-						ipltf._plotBeam3D(iNode_final, jNode_final, ax, show_element_tags, eleTag, "solid")
+						ipltf._plotBeam3D(iNode_final, jNode_final, ax, show_element_tags, style)
 					
 				if len(Nodes) == 4:
 					## 3D four-node Quad/shell element
@@ -846,9 +852,9 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 								adjusted_NodeArray[adjNodeNum,0:2] = nodecoordsFinal(node)
 								
 					if overlap == "yes":
-						ipltf._plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, "wire", fillSurface='no')
+						ipltf._plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, eleTag, overlapStyle)
 						
-					ipltf._plotQuad3D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+					ipltf._plotQuad3D(iNode_final, jNode_final, kNode_final, lNode_final, ax, show_element_tags, eleTag, style)
 
 				if len(Nodes) == 8:
 					## 3D eight-node Brick element
@@ -877,10 +883,10 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 								adjusted_NodeArray[adjNodeNum,0:2] = nodecoordsFinal(node)
 								
 					if overlap == "yes":
-						ipltf._plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, eleTag, "wire", fillSurface='no') # plot undeformed shape
+						ipltf._plotCubeVol(iNode, jNode, kNode, lNode, iiNode, jjNode, kkNode, llNode, ax, show_element_tags, eleTag, overlapStyle) # plot undeformed shape
 
 					ipltf._plotCubeVol(iNode_final, jNode_final, kNode_final, lNode_final, iiNode_final, jjNode_final, kkNode_final, llNode_final, 
-									ax, show_element_tags, eleTag, "solid", fillSurface='yes')
+									ax, show_element_tags, eleTag, style)
 					
 				adjNodeNum+=1
 				
@@ -893,12 +899,14 @@ def plot_deformedshape(Model="none", LoadCase="none", tstep = -1, scale = 10, ov
 		if adjustViewport == "yes":
 			DeflectedNodeCoordArray = adjusted_NodeArray[0:adjNodeNum-1,:]
 		
-		ipltf._setStandardViewport(fig, ax, DeflectedNodeCoordArray, len(nodecoords(nodetags[0])))					
-		plt.axis('on')
+		ipltf._setStandardViewport(fig, ax, DeflectedNodeCoordArray, style, len(nodecoords(nodetags[0])))					
+# 		plt.axis('on')
 		plt.show()
 		
 		return fig, ax
 
+
+node_style_animation = {'color':'black', 'marker':'o','markersize':2., 'linewidth':0.} 
 
 def animate_deformedshape( Model = 'none', LoadCase = 'none', dt = 0, tStart = 0, tEnd = 0, scale = 10, fps = 24, 
                           FrameInterval = 0, timeScale = 1, Movie='none'):
@@ -973,7 +981,7 @@ def animate_deformedshape( Model = 'none', LoadCase = 'none', dt = 0, tStart = 0
     plt.subplots_adjust(bottom=.15) # Add extra space bellow graph
     
 	# Adjust plot area.   
-    ipltf._setStandardViewport(fig, ax, nodes[:,1:], ndm, Disp)
+    ipltf._setStandardViewport(fig, ax, nodes[:,1:], ndm,style, Disp)
          
        
     # ========================================================================
@@ -1276,7 +1284,7 @@ def plot_fiberResponse2D(Model, LoadCase, element, section, LocalAxis = 'y', Inp
     line = ax.plot(fibrePositionSorted, fibreResponseSorted)
     
     xyinput = np.array([fibrePositionSorted,fibreResponseSorted]).T
-    ipltf._setStandardViewport(fig, ax, xyinput, 2)
+    ipltf._setStandardViewport(fig, ax, 2,style, xyinput)
     
     ax.set_ylabel(axisYlabel)  
     ax.set_xlabel(axisXlabel)    
