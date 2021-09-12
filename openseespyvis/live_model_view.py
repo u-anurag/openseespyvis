@@ -1,5 +1,5 @@
 """
-    A code to show a live model rendering of an OpenSeesPy modeling script.
+    A code to show a live model rendering of an OpenSeesPy modeling script. Works only for 2D beam-column elements for now.
 	
 	Use: 
 		import openseespyvis.live_model_view as opspre
