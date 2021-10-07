@@ -125,7 +125,17 @@ def _plotQuad2D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, eleS
 def _plotQuad3D(iNode, jNode, kNode, lNode, ax, show_element_tags, element, eleStyle, fillSurface):
 	## procedure to render a 3D four node shell element. use eleStyle = "wire" for a wire frame, and "solid" for solid element lines.
 	## USe fillSurface = "yes" for color fill in the elements. fillSurface="no" for wireframe.
-	
+
+    # Check for MVLEM3D node switch
+    # MVLEM3D should be used only for rectangular shell elments. FUTURE work
+    vec_ij = np.array([jNode[0]-iNode[0], jNode[1]-iNode[1], jNode[2]-iNode[2]])
+    vec_jk = np.array([kNode[0]-jNode[0], kNode[1]-jNode[1], kNode[2]-jNode[2]])
+
+    if vec_ij@vec_jk != 0:
+        lNode, kNode = kNode, lNode
+    else:
+        pass
+		
     tempLines = [None]
     tempSurface = [None]
     tempTag = [None]
