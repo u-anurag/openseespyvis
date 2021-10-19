@@ -1,3 +1,6 @@
+# This package is now depreciated. A new package is maintained as ([vfo](https://github.com/u-anurag/vfo)) "Visualization For OpenSees".
+
+
 # openseespyvis
 A developmenet branch of OpenSeesPy Visualization commands. This can be used while waiting for the next release of OpenSeesPy.
 It is advisable to use the latest release of OpenSeesPy (once released) for stable functions.
