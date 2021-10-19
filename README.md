@@ -1,4 +1,4 @@
-# This package is now depreciated. A new package is maintained as VFO "Visualization For OpenSees".
+# This package is now depreciated. A new package is maintained as ([vfo](https://github.com/u-anurag/vfo)) "Visualization For OpenSees".
 
 
 # openseespyvis
